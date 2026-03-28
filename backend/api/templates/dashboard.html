@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blood Cancer Detection System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #1b2845 0, #050812 55%, #02030a 100%);
+      color: #f5f7ff;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      height: 100vh;
+    }
+    .sidebar {
+      background: linear-gradient(180deg, #050814 0%, #050814 60%, #03040c 100%);
+      border-right: 1px solid rgba(255,255,255,0.03);
+      padding: 20px 18px;
+    }
+    .logo {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 24px;
+    }
+    .nav-item {
+      padding: 9px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #c3cfef;
+      cursor: pointer;
+    }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(99,132,255,0.35), rgba(9,175,246,0.4));
+      color: #fff;
+    }
+    .main {
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .top-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 14px;
+    }
+    .middle-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 2fr 3fr 2fr;
+      gap: 14px;
+    }
+    .card {
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(7,11,30,0.95));
+      border-radius: 18px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .card-title {
+      font-size: 14px;
+      color: #9fb2ff;
+      margin-bottom: 10px;
+    }
+    .metric-main { font-size: 30px; font-weight: 600; }
+    .metric-sub { font-size: 13px; color: #9fb2ff; }
+    .attention-img {
+      width: 100%;
+      height: 80px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #050814;
+    }
+    .small-label {
+      font-size: 11px;
+      color: #9fb2ff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(146,162,210,0.14);
+    }
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(78,201,176,0.12);
+      color: #6ff5d0;
+    }
+    .progress-chart-placeholder {
+      height: 140px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(20,116,255,0.4), rgba(3,10,33,0.9));
+      position: relative;
+      overflow: hidden;
+    }
+    .secondary-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(159,178,255,0.6);
+      background: rgba(5,8,20,0.9);
+      color: #c3d1ff;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .secondary-btn:hover {
+      background: rgba(22,34,80,0.9);
+    }
+
+    /* ── NEW: Cancer type + Stage badges ── */
+    .new-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .type-badge {
+      display: inline-block;
+      padding: 4px 16px;
+      border-radius: 999px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .type-normal { background: rgba(78,201,130,0.15); color: #4ec982; border: 1px solid #4ec982; }
+    .type-all    { background: rgba(255,92,122,0.15);  color: #ff5c7a; border: 1px solid #ff5c7a; }
+    .type-hem    { background: rgba(255,178,75,0.15);  color: #ffb24b; border: 1px solid #ffb24b; }
+    .stage-badge {
+      display: inline-block;
+      padding: 4px 16px;
+      border-radius: 999px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .stage-none      { background: rgba(78,201,130,0.15); color: #4ec982; border: 1px solid #4ec982; }
+    .stage-benign    { background: rgba(75,200,255,0.15); color: #4bc8ff; border: 1px solid #4bc8ff; }
+    .stage-premature { background: rgba(255,178,75,0.15); color: #ffb24b; border: 1px solid #ffb24b; }
+    .stage-mature    { background: rgba(255,92,122,0.15); color: #ff5c7a; border: 1px solid #ff5c7a; }
+
+  /* ── PDF Button ── */
+  .pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 20px;
+    border-radius: 999px;
+    border: 1px solid rgba(99,220,120,0.5);
+    background: rgba(99,220,120,0.08);
+    color: #6fdb88;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .pdf-btn:hover {
+    background: rgba(99,220,120,0.18);
+    box-shadow: 0 0 16px rgba(99,220,120,0.2);
+  }
+  .pdf-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .upload-box {
+    border: 1.5px dashed rgba(159,178,255,0.35);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #7a8fcc;
+    cursor: pointer;
+  }
+  #scan-input { display: none; }
+  .primary-btn {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(90deg,#3b6fff,#09aff6);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .primary-btn:hover { opacity: 0.88; }
+
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Blood Cancer Detection</div>
+    <div class="nav-item active">Dashboard</div>
+    <div class="nav-item">Upload</div>
+    <div class="nav-item">Results</div>
+  </aside>
+
+  <main class="main">
+
+    <!-- Doctor review banner -->
+    <div id="doctor-banner" style="
+      display:none;
+      margin-bottom:10px;
+      padding:10px 14px;
+      border-radius:12px;
+      background: linear-gradient(90deg,#ff4b5c,#ff9b4b);
+      color:#1b0505;
+      font-size:13px;
+      font-weight:600;">
+      <span id="doctor-banner-text">This case requires expert review.</span>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:18px;font-weight:600;">Blood Cancer Detection System</div>
+      <button class="pdf-btn" id="pdf-btn" onclick="downloadPDF()" disabled>
+        📄 Download Report PDF
+      </button>
+    </div>
+
+    <!-- TOP ROW -->
+    <section class="top-row">
+      <div class="card">
+  <div class="card-title">Upload New Scan</div>
+  <form id="scan-form" style="display:flex; flex-direction:column; gap:10px;">
+    <div class="upload-box">
+      <span id="file-label">Click or drop a blood smear image here</span>
+      <input id="scan-input" name="scan" type="file" accept="image/*">
+    </div>
+    <div style="display:flex; justify-content:flex-start; gap:10px;">
+      <button type="button" class="secondary-btn"
+              onclick="document.getElementById('scan-input').click();">
+        Choose File
+      </button>
+      <button type="submit" class="primary-btn">
+        Run Analysis
+      </button>
+    </div>
+  </form>
+</div>
+
+
+      <div class="card">
+        <div class="card-title">Severity Score</div>
+        <div class="metric-main" id="severity-score">--%</div>
+        <div class="metric-sub" id="risk-label">Awaiting scan</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Attention Map</div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="small-label">Model attention visualization</div>
+          <select id="exp-source">
+            <option value="gradcam">Grad-CAM++</option>
+            <option value="cbam-spatial">CBAM Spatial</option>
+            <option value="cbam-channel">CBAM Channel</option>
+          </select>
+        </div>
+
+        <img id="attention-preview" class="attention-img">
+        <div class="small-label" id="explanation-flags">Explanation flags: --</div>
+        <div class="small-label">Legend: Red → High, Blue → Low</div>
+      </div>
+    </section>
+
+    <!-- NEW ROW: Cancer Type + Stage -->
+    <section class="new-row">
+
+      <div class="card">
+        <div class="card-title">🔬 Cancer Type</div>
+        <div id="cancer-type-badge" class="type-badge type-normal">--</div>
+        <div class="metric-sub" style="margin-top:8px;" id="cancer-type-sub">Awaiting scan</div>
+        <div class="small-label" style="margin-top:6px;">
+          ALL = Acute Lymphoblastic Leukemia &nbsp;|&nbsp; HEM = Hematologic Malignancy
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Cancer Stage</div>
+        <div id="stage-badge" class="stage-badge stage-none">--</div>
+        <div class="metric-sub" style="margin-top:8px;" id="stage-sub">Awaiting scan</div>
+        <div class="small-label" style="margin-top:6px;" id="stage-desc">
+          Stage is determined only when cancer is detected.
+        </div>
+      </div>
+
+    </section>
+
+    <!-- MIDDLE ROW -->
+    <section class="middle-row">
+      <div class="card">
+        <div class="card-title">Patient Data</div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Type</th><th>Stage</th><th>Severity</th><th>Status</th><th>Time</th></tr>
+          </thead>
+          <tbody id="patient-rows"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- BOTTOM ROW -->
+    <section class="bottom-row">
+      <div class="card">
+        <div class="card-title">Progress Chart</div>
+        <div class="progress-chart-placeholder"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🩺 Clinical Summary</div>
+        <div class="small-label" id="clinical-risk-line" style="margin-bottom:8px;">--</div>
+        <div class="small-label">Diagnosis: <span id="clinical-diagnosis" style="color:#f5f7ff;">--</span></div>
+        <div class="small-label" style="margin-top:4px;">Recommendation: <span id="clinical-recommendation" style="color:#f5f7ff;">--</span></div>
+        <div class="small-label" style="margin-top:4px;">Follow-up: <span id="clinical-followup" style="color:#f5f7ff;">--</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Cell Abnormality Report</div>
+        <div class="small-label" id="abnormality-text">Model-estimated values</div>
+        <div class="small-label">Blast %: <span id="ab-blast">--</span></div>
+        <div class="small-label">Size variance: <span id="ab-size">--</span></div>
+        <div class="small-label">Nuclear irregularity: <span id="ab-nuclear">--</span></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const scanInput = document.getElementById('scan-input');
+  const fileLabel = document.getElementById('file-label');
+  let lastScanData = null;
+
+  scanInput.addEventListener('change', () => {
+    if (scanInput.files.length > 0) {
+      fileLabel.textContent = scanInput.files[0].name;
+    } else {
+      fileLabel.textContent = 'Click or drop a blood smear image here';
+    }
+  });
+
+  document.getElementById('scan-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!scanInput.files.length) {
+      alert('Please choose an image first.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('scan', scanInput.files[0]);
+
+    const resp = await fetch('/api/predict/', {
+      method: 'POST',
+      body: formData
+    });
+    if (!resp.ok) {
+      alert('Prediction error: ' + resp.status);
+      return;
+    }
+    const data = await resp.json();
+    lastScanData = data;
+    document.getElementById('pdf-btn').disabled = false;
+    updateDashboard(data);
+  });
+
+  function downloadPDF() {
+    if (!lastScanData) return;
+    const d = lastScanData;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const W = 210; // A4 width mm
+    const margin = 18;
+    let y = 0;
+
+    // ── Helper functions ──
+    const col1 = margin;
+    const col2 = W / 2 + 4;
+    const colW = W / 2 - margin - 4;
+
+    function setFont(style, size, color) {
+      doc.setFont('helvetica', style);
+      doc.setFontSize(size);
+      doc.setTextColor(...(color || [30, 30, 60]));
+    }
+
+    function hline(yPos, r, g, b) {
+      doc.setDrawColor(r ?? 220, g ?? 220, b ?? 235);
+      doc.setLineWidth(0.3);
+      doc.line(margin, yPos, W - margin, yPos);
+    }
+
+    function pill(text, x, yPos, bgR, bgG, bgB, textR, textG, textB) {
+      const tw = doc.getTextWidth(text);
+      doc.setFillColor(bgR, bgG, bgB);
+      doc.roundedRect(x, yPos - 4.5, tw + 10, 7, 3, 3, 'F');
+      doc.setTextColor(textR, textG, textB);
+      doc.text(text, x + 5, yPos);
+    }
+
+    // ══════════════════════════════
+    // HEADER BANNER
+    // ══════════════════════════════
+    doc.setFillColor(10, 15, 40);
+    doc.rect(0, 0, W, 36, 'F');
+
+    // accent stripe
+    doc.setFillColor(77, 124, 254);
+    doc.rect(0, 0, 4, 36, 'F');
+
+    setFont('bold', 18, [255, 255, 255]);
+    doc.text('HemoScan AI', margin + 4, 13);
+
+    setFont('normal', 9, [160, 180, 255]);
+    doc.text('Blood Cancer Detection System  ·  AI-Powered Morphological Analysis', margin + 4, 21);
+
+    setFont('normal', 8, [100, 120, 180]);
+    doc.text('PATIENT DIAGNOSTIC REPORT  ·  For academic/research use only', margin + 4, 28);
+
+    // report date top right
+    setFont('normal', 8, [160, 180, 255]);
+    const now = new Date();
+    doc.text('Generated: ' + now.toLocaleString(), W - margin, 14, { align: 'right' });
+    doc.text('Patient ID: ' + (d.patient_id || 'N/A'), W - margin, 21, { align: 'right' });
+
+    y = 44;
+
+    // ══════════════════════════════
+    // SECTION 1: DIAGNOSIS SUMMARY
+    // ══════════════════════════════
+    setFont('bold', 11, [30, 40, 100]);
+    doc.text('1. DIAGNOSIS SUMMARY', margin, y);
+    hline(y + 2, 180, 190, 240);
+    y += 10;
+
+    // Two-column boxes
+    // LEFT: Cancer Type
+    doc.setFillColor(245, 247, 255);
+    doc.roundedRect(col1, y, colW, 28, 4, 4, 'F');
+    doc.setDrawColor(200, 210, 255);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(col1, y, colW, 28, 4, 4, 'S');
+
+    setFont('bold', 8, [100, 120, 200]);
+    doc.text('CANCER TYPE', col1 + 6, y + 7);
+
+    const typeColors = {
+      'Normal': [[200, 255, 220], [0, 160, 80]],
+      'ALL':    [[255, 210, 215], [200, 0, 40]],
+      'HEM':    [[255, 235, 200], [200, 120, 0]],
+    };
+    const [typeBg, typeTx] = typeColors[d.cancer_type] || typeColors['Normal'];
+    setFont('bold', 16, typeTx);
+    doc.text(d.cancer_type || '--', col1 + 6, y + 18);
+
+    setFont('normal', 8, [80, 100, 160]);
+    const typeHint = d.cancer_type === 'ALL' ? 'Acute Lymphoblastic Leukemia'
+                   : d.cancer_type === 'HEM' ? 'Hematologic Malignancy'
+                   : 'No malignancy detected';
+    doc.text(typeHint, col1 + 6, y + 25);
+
+    // RIGHT: Stage
+    doc.setFillColor(245, 247, 255);
+    doc.roundedRect(col2, y, colW, 28, 4, 4, 'F');
+    doc.setDrawColor(200, 210, 255);
+    doc.roundedRect(col2, y, colW, 28, 4, 4, 'S');
+
+    setFont('bold', 8, [100, 120, 200]);
+    doc.text('CANCER STAGE', col2 + 6, y + 7);
+
+    const stageColors = {
+      null:         [[200, 255, 220], [0, 140, 80]],
+      'Benign':     [[200, 235, 255], [0, 100, 200]],
+      'Pre-mature': [[255, 235, 200], [180, 100, 0]],
+      'Mature':     [[255, 210, 215], [180, 0, 40]],
+    };
+    const [stageBg, stageTx] = stageColors[d.stage ?? null] || stageColors[null];
+    setFont('bold', 16, stageTx);
+    doc.text(d.stage || 'N/A', col2 + 6, y + 18);
+
+    setFont('normal', 8, [80, 100, 160]);
+    const stageHint = d.stage === 'Benign' ? 'Early stage — Low severity'
+                    : d.stage === 'Pre-mature' ? 'Moderate stage — Progressing'
+                    : d.stage === 'Mature' ? 'Advanced stage — High severity'
+                    : 'No cancer detected';
+    doc.text(stageHint, col2 + 6, y + 25);
+
+    y += 34;
+
+    // Severity + Risk row
+    doc.setFillColor(240, 244, 255);
+    doc.roundedRect(col1, y, colW, 20, 4, 4, 'F');
+    setFont('bold', 8, [100, 120, 200]);
+    doc.text('SEVERITY SCORE', col1 + 6, y + 7);
+    setFont('bold', 14, [50, 80, 200]);
+    doc.text((d.severity_percent ?? '--') + '%', col1 + 6, y + 16);
+
+    doc.setFillColor(240, 244, 255);
+    doc.roundedRect(col2, y, colW, 20, 4, 4, 'F');
+    setFont('bold', 8, [100, 120, 200]);
+    doc.text('RISK LEVEL', col2 + 6, y + 7);
+    const riskTx = d.risk_label === 'High Risk'     ? [200, 0, 40]
+                 : d.risk_label === 'Moderate Risk' ? [180, 100, 0]
+                 : [0, 140, 80];
+    setFont('bold', 14, riskTx);
+    doc.text(d.risk_label || '--', col2 + 6, y + 16);
+
+    y += 28;
+
+    // ══════════════════════════════
+    // SECTION 2: CLINICAL SUMMARY
+    // ══════════════════════════════
+    setFont('bold', 11, [30, 40, 100]);
+    doc.text('2. CLINICAL SUMMARY', margin, y);
+    hline(y + 2, 180, 190, 240);
+    y += 10;
+
+    const clinicalMap = {
+      'Normal':        { risk:'No malignancy detected.', diagnosis:'Blood smear within normal range. No abnormal leukocytes observed.', recommendation:'No immediate action required. Routine check-up advised.', followup:'Annual blood test recommended.' },
+      'ALL-Benign':    { risk:'Early-stage ALL indicators.', diagnosis:'Mild lymphoblast abnormalities. Low blast cell percentage.', recommendation:'Hematologist consultation recommended.', followup:'Repeat blood smear within 2–4 weeks.' },
+      'ALL-Pre-mature':{ risk:'Moderate ALL progression.', diagnosis:'Elevated lymphoblast presence with irregular nuclear boundaries.', recommendation:'Prompt hematological evaluation required.', followup:'Bone marrow biopsy may be needed. Review within 1 week.' },
+      'ALL-Mature':    { risk:'Advanced ALL pattern detected.', diagnosis:'High-density abnormal lymphoblasts with prominent nucleoli.', recommendation:'Urgent specialist referral required.', followup:'Immediate oncology consultation. Do not delay treatment.' },
+      'HEM-Benign':    { risk:'Early hematologic malignancy signs.', diagnosis:'Mild leukocyte morphology irregularities observed.', recommendation:'Clinical evaluation and follow-up blood work advised.', followup:'Repeat CBC within 2–4 weeks.' },
+      'HEM-Pre-mature':{ risk:'Moderate hematologic malignancy progression.', diagnosis:'Abnormal WBC clustering and irregular cell sizes.', recommendation:'Hematology referral strongly advised.', followup:'Immunophenotyping and bone marrow assessment recommended.' },
+      'HEM-Mature':    { risk:'Advanced hematologic malignancy pattern.', diagnosis:'Significant nuclear fragmentation and membrane distortion.', recommendation:'Immediate specialist consultation required.', followup:'Urgent oncology referral. Begin workup immediately.' },
+    };
+    const cKey  = d.cancer_type === 'Normal' ? 'Normal' : `${d.cancer_type}-${d.stage}`;
+    const cInfo = clinicalMap[cKey] || clinicalMap['Normal'];
+
+    const clinRows = [
+      ['🔍 Risk Assessment',  cInfo.risk],
+      ['🧾 Diagnosis',        cInfo.diagnosis],
+      ['💊 Recommendation',   cInfo.recommendation],
+      ['📅 Follow-up',        cInfo.followup],
+    ];
+
+    clinRows.forEach(([label, val]) => {
+      doc.setFillColor(248, 250, 255);
+      doc.roundedRect(margin, y, W - margin * 2, 14, 3, 3, 'F');
+      doc.setDrawColor(215, 220, 245);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, W - margin * 2, 14, 3, 3, 'S');
+
+      setFont('bold', 8, [80, 100, 180]);
+      doc.text(label, margin + 5, y + 6);
+      setFont('normal', 9, [30, 40, 80]);
+      const lines = doc.splitTextToSize(val, W - margin * 2 - 60);
+      doc.text(lines, margin + 60, y + 6);
+      y += 17;
+    });
+
+    y += 2;
+
+    // ══════════════════════════════
+    // SECTION 3: CELL ABNORMALITY
+    // ══════════════════════════════
+    setFont('bold', 11, [30, 40, 100]);
+    doc.text('3. CELL ABNORMALITY REPORT', margin, y);
+    hline(y + 2, 180, 190, 240);
+    y += 10;
+
+    const ab = d.cell_abnormality || {};
+    const abRows = [
+      ['Blast Cell Percentage', (ab.estimated_blast_percentage ?? '--') + (ab.estimated_blast_percentage != null ? '%' : '')],
+      ['Cell Size Variance',    ab.cell_size_variance    || '--'],
+      ['Nuclear Irregularity',  ab.nuclear_irregularity  || '--'],
+    ];
+
+    abRows.forEach(([label, val], i) => {
+      if (i % 2 === 0) doc.setFillColor(248, 250, 255);
+      else             doc.setFillColor(255, 255, 255);
+      doc.rect(margin, y, W - margin * 2, 10, 'F');
+      hline(y + 10, 220, 225, 240);
+
+      setFont('normal', 9, [80, 100, 160]);
+      doc.text(label, margin + 4, y + 7);
+      setFont('bold', 9, [30, 40, 80]);
+      doc.text(String(val), W - margin - 4, y + 7, { align: 'right' });
+      y += 10;
+    });
+
+    setFont('normal', 7.5, [140, 150, 180]);
+    doc.text(ab.note || 'Model-estimated values for academic demonstration only.', margin, y + 6);
+    y += 14;
+
+    // ══════════════════════════════
+    // SECTION 4: STAGE DESCRIPTION
+    // ══════════════════════════════
+    if (d.stage_description) {
+      setFont('bold', 11, [30, 40, 100]);
+      doc.text('4. STAGE INTERPRETATION', margin, y);
+      hline(y + 2, 180, 190, 240);
+      y += 10;
+
+      doc.setFillColor(248, 250, 255);
+      const descLines = doc.splitTextToSize(d.stage_description, W - margin * 2 - 10);
+      const boxH = descLines.length * 5.5 + 10;
+      doc.roundedRect(margin, y, W - margin * 2, boxH, 4, 4, 'F');
+      doc.setDrawColor(200, 210, 240);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(margin, y, W - margin * 2, boxH, 4, 4, 'S');
+
+      // accent left border
+      doc.setFillColor(77, 124, 254);
+      doc.rect(margin, y, 3, boxH, 'F');
+
+      setFont('normal', 9, [40, 55, 100]);
+      doc.text(descLines, margin + 8, y + 8);
+      y += boxH + 8;
+    }
+
+    // ══════════════════════════════
+    // FOOTER
+    // ══════════════════════════════
+    const footerY = 287;
+    doc.setFillColor(240, 243, 255);
+    doc.rect(0, footerY - 4, W, 14, 'F');
+    hline(footerY - 4, 200, 210, 240);
+
+    setFont('normal', 7.5, [130, 140, 180]);
+    doc.text(
+      '⚠  This report is AI-generated for academic/research purposes only and does NOT constitute a clinical diagnosis.',
+      margin, footerY + 2
+    );
+    doc.text(
+      'HemoScan AI  ·  EfficientNetV2 + CBAM  ·  ' + now.toLocaleDateString(),
+      W - margin, footerY + 2, { align: 'right' }
+    );
+
+    // ── Save ──
+    doc.save(`HemoScan_Report_${d.patient_id || 'patient'}_${now.toISOString().slice(0,10)}.pdf`);
+  }
+
+  function updateDashboard(d) {
+    // Severity + type
+    document.getElementById('severity-score').textContent =
+      (d.severity_percent ?? 0) + '%';
+    document.getElementById('risk-label').textContent =
+      d.risk_label + ' • ' + d.cancer_type;
+
+    // Doctor review banner
+    const banner = document.getElementById('doctor-banner');
+    const bannerText = document.getElementById('doctor-banner-text');
+    const dr = d.doctor_review || {};
+    if (dr.status === 'DOCTOR_REVIEW_REQUIRED') {
+      const rules = (dr.reasons || []).join(' • ');
+      banner.style.display = 'block';
+      bannerText.textContent =
+        'This case requires expert review – ' + rules;
+    } else {
+      banner.style.display = 'none';
+    }
+
+    // ── Clinical Summary (medical terms only) ──
+    const clinicalMap = {
+      'Normal': {
+        risk:           'No malignancy detected.',
+        diagnosis:      'Blood smear within normal range. No abnormal leukocytes observed.',
+        recommendation: 'No immediate action required. Routine check-up advised.',
+        followup:       'Annual blood test recommended.'
+      },
+      'ALL-Benign': {
+        risk:           'Early-stage Acute Lymphoblastic Leukemia indicators.',
+        diagnosis:      'Mild lymphoblast abnormalities. Low blast cell percentage.',
+        recommendation: 'Hematologist consultation recommended for confirmation.',
+        followup:       'Repeat blood smear within 2–4 weeks.'
+      },
+      'ALL-Pre-mature': {
+        risk:           'Moderate Acute Lymphoblastic Leukemia progression.',
+        diagnosis:      'Elevated lymphoblast presence with irregular nuclear boundaries.',
+        recommendation: 'Prompt hematological evaluation required.',
+        followup:       'Bone marrow biopsy may be needed. Review within 1 week.'
+      },
+      'ALL-Mature': {
+        risk:           'Advanced Acute Lymphoblastic Leukemia pattern detected.',
+        diagnosis:      'High-density abnormal lymphoblasts with prominent nucleoli.',
+        recommendation: 'Urgent specialist referral required.',
+        followup:       'Immediate oncology consultation. Do not delay treatment.'
+      },
+      'HEM-Benign': {
+        risk:           'Early hematologic malignancy signs detected.',
+        diagnosis:      'Mild leukocyte morphology irregularities observed.',
+        recommendation: 'Clinical evaluation and follow-up blood work advised.',
+        followup:       'Repeat complete blood count (CBC) within 2–4 weeks.'
+      },
+      'HEM-Pre-mature': {
+        risk:           'Moderate hematologic malignancy progression.',
+        diagnosis:      'Abnormal white blood cell clustering and irregular cell sizes.',
+        recommendation: 'Hematology referral strongly advised.',
+        followup:       'Immunophenotyping and bone marrow assessment recommended.'
+      },
+      'HEM-Mature': {
+        risk:           'Advanced hematologic malignancy pattern detected.',
+        diagnosis:      'Significant nuclear fragmentation and membrane distortion.',
+        recommendation: 'Immediate specialist consultation required.',
+        followup:       'Urgent oncology referral. Begin diagnostic workup immediately.'
+      },
+    };
+
+    const cKey  = d.cancer_type === 'Normal' ? 'Normal' : `${d.cancer_type}-${d.stage}`;
+    const cInfo = clinicalMap[cKey] || clinicalMap['Normal'];
+    document.getElementById('clinical-risk-line').textContent      = cInfo.risk;
+    document.getElementById('clinical-diagnosis').textContent      = cInfo.diagnosis;
+    document.getElementById('clinical-recommendation').textContent = cInfo.recommendation;
+    document.getElementById('clinical-followup').textContent       = cInfo.followup;
+
+    // Table row
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.patient_id}</td>
+      <td>${d.cancer_type}</td>
+      <td>${d.stage ?? 'N/A'}</td>
+      <td>${d.severity_percent}%</td>
+      <td><span class="status-pill">${d.risk_label}</span></td>
+      <td>${d.timestamp || new Date().toLocaleTimeString()}</td>
+    `;
+    document.getElementById('patient-rows').prepend(tr);
+
+    // ── NEW: Cancer Type badge ──
+    const typeBadge = document.getElementById('cancer-type-badge');
+    const typeSub   = document.getElementById('cancer-type-sub');
+    const probs     = d.probabilities || {};
+    if (d.cancer_type === 'Normal') {
+      typeBadge.textContent = 'Normal';
+      typeBadge.className   = 'type-badge type-normal';
+      typeSub.textContent   = 'No malignancy detected.';
+    } else if (d.cancer_type === 'ALL') {
+      typeBadge.textContent = 'ALL';
+      typeBadge.className   = 'type-badge type-all';
+      typeSub.textContent   = `Acute Lymphoblastic Leukemia (${((probs.ALL||0)*100).toFixed(1)}% confidence)`;
+    } else {
+      typeBadge.textContent = 'HEM';
+      typeBadge.className   = 'type-badge type-hem';
+      typeSub.textContent   = `Hematologic Malignancy (${((probs.HEM||0)*100).toFixed(1)}% confidence)`;
+    }
+
+    // ── NEW: Stage badge ──
+    const stageBadge = document.getElementById('stage-badge');
+    const stageSub   = document.getElementById('stage-sub');
+    const stageDesc  = document.getElementById('stage-desc');
+    const stage      = d.stage ?? null;
+    const stageMap   = {
+      null:         ['stage-none',      'N/A — No cancer detected'],
+      'Benign':     ['stage-benign',    'Early stage — Low severity'],
+      'Pre-mature': ['stage-premature', 'Moderate stage — Progressing'],
+      'Mature':     ['stage-mature',    'Advanced stage — High severity'],
+    };
+    const [cls, tip] = stageMap[stage] || ['stage-none', '--'];
+    stageBadge.textContent = stage ?? 'N/A';
+    stageBadge.className   = 'stage-badge ' + cls;
+    stageSub.textContent   = tip;
+    stageDesc.textContent  = d.stage_description || '';
+
+    // Attention image
+    if (d.paths?.attention_map) {
+      document.getElementById('attention-preview').src = d.paths.attention_map;
+    }
+
+    // Progress chart bar
+    const chart = document.querySelector('.progress-chart-placeholder');
+    const bar = document.createElement('div');
+    bar.style.position = 'absolute';
+    bar.style.bottom = '0';
+    bar.style.left = '0';
+    bar.style.width = '40px';
+    bar.style.borderRadius = '10px 10px 0 0';
+    bar.style.marginLeft = (chart.children.length * 50) + 'px';
+    bar.style.height = (d.severity_percent || 0) + '%';
+    bar.style.background = 'linear-gradient(180deg,#4ac5ff,#145dff)';
+    chart.appendChild(bar);
+
+    // Cell abnormality report
+    const ab = d.cell_abnormality || {};
+    document.getElementById('ab-blast').textContent =
+      ab.estimated_blast_percentage ?? '--';
+    document.getElementById('ab-size').textContent =
+      ab.cell_size_variance || '--';
+    document.getElementById('ab-nuclear').textContent =
+      ab.nuclear_irregularity || '--';
+    document.getElementById('abnormality-text').textContent =
+      ab.note || 'Model-estimated values for academic demonstration only.';
+  }
+</script>
+
+</body>
+</html>
